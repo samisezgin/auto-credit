@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Not Girisi Sistemi (Test Ortami)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; }
+
+        /* Ust bar */
+        .toolbar {
+            background: #2c3e50; color: white; padding: 10px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .toolbar h1 { font-size: 16px; }
+
+        /* Bot uyari banneri */
+        #botUyari {
+            display: none;
+            background: #e74c3c; color: white;
+            padding: 15px 20px; font-size: 18px; font-weight: bold;
+            text-align: center; animation: yanipSon 0.5s infinite;
+        }
+        @keyframes yanipSon {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Log paneli */
+        #logPanel {
+            position: fixed; right: 0; top: 0; width: 350px; height: 100vh;
+            background: #1a1a2e; color: #0f0; font-family: 'Consolas', monospace;
+            font-size: 11px; overflow-y: auto; padding: 10px; z-index: 1000;
+        }
+        #logPanel h3 { color: #fff; margin-bottom: 8px; font-size: 13px; }
+        .log-entry { margin: 2px 0; padding: 2px 4px; border-left: 2px solid #333; }
+        .log-warn { color: #f39c12; border-left-color: #f39c12; }
+        .log-danger { color: #e74c3c; border-left-color: #e74c3c; font-weight: bold; }
+        .log-ok { color: #2ecc71; border-left-color: #2ecc71; }
+
+        /* Istatistik paneli */
+        #statsPanel {
+            position: fixed; right: 350px; top: 0; width: 250px;
+            background: #16213e; color: #eee; padding: 15px; z-index: 999;
+            font-size: 12px; border-left: 1px solid #333;
+        }
+        #statsPanel h3 { color: #fff; margin-bottom: 10px; }
+        .stat-row { display: flex; justify-content: space-between; margin: 5px 0; }
+        .stat-label { color: #aaa; }
+        .stat-value { font-weight: bold; }
+        .stat-ok { color: #2ecc71; }
+        .stat-warn { color: #f39c12; }
+        .stat-danger { color: #e74c3c; }
+
+        /* Skor gostergesi */
+        #skorBar {
+            margin-top: 15px; background: #333; border-radius: 10px;
+            height: 20px; overflow: hidden;
+        }
+        #skorFill {
+            height: 100%; width: 0%; transition: width 0.3s;
+            border-radius: 10px;
+        }
+
+        /* Ana icerik */
+        .content { margin-right: 600px; padding: 20px; }
+
+        /* Ogrenci tablosu */
+        .ogrenci-card {
+            background: white; border-radius: 8px; padding: 15px;
+            margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .ogrenci-baslik {
+            font-weight: bold; font-size: 14px; color: #2c3e50;
+            margin-bottom: 10px; padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .not-satir {
+            display: flex; align-items: center; padding: 4px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .not-satir:hover { background: #f8f9fa; }
+        .ders-adi { width: 180px; font-size: 13px; color: #555; }
+        .not-secim label {
+            margin-right: 8px; font-size: 12px; color: #777; cursor: pointer;
+        }
+        .not-secim input[type="radio"] { cursor: pointer; }
+
+        /* Kaydet butonu */
+        #IOMToolbarActive1_btnKaydet {
+            background: #27ae60; color: white; border: none;
+            padding: 12px 30px; font-size: 14px; border-radius: 5px;
+            cursor: pointer; margin-top: 10px;
+        }
+        #IOMToolbarActive1_btnKaydet:hover { background: #219a52; }
+
+        /* Durum cubugu */
+        #durumCubugu {
+            position: fixed; bottom: 0; left: 0; right: 600px;
+            background: #2c3e50; color: white; padding: 8px 20px;
+            font-size: 12px; display: flex; justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <h1>Ogrenci Not Giris Sistemi (TEST ORTAMI)</h1>
+    <span id="saatGosterge"></span>
+</div>
+
+<div id="botUyari"></div>
+
+<div id="statsPanel">
+    <h3>Bot Algilama Skorlari</h3>
+    <div class="stat-row">
+        <span class="stat-label">isTrusted Ihlali:</span>
+        <span class="stat-value" id="stat-trusted">0</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">Sabit Aralik Tespiti:</span>
+        <span class="stat-value" id="stat-timing">0</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">Ayni Piksel Tespiti:</span>
+        <span class="stat-value" id="stat-pixel">0</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">Hiz Asimi:</span>
+        <span class="stat-value" id="stat-speed">0</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">Fare Hareketsizligi:</span>
+        <span class="stat-value" id="stat-nomouse">0</span>
+    </div>
+    <hr style="border-color:#333; margin: 10px 0;">
+    <div class="stat-row">
+        <span class="stat-label">TOPLAM SKOR:</span>
+        <span class="stat-value" id="stat-total">0</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">KARAR:</span>
+        <span class="stat-value stat-ok" id="stat-karar">INSAN</span>
+    </div>
+    <div id="skorBar"><div id="skorFill"></div></div>
+    <p style="margin-top:10px; font-size:10px; color:#888;">
+        Skor 0-30: Insan | 30-60: Supheli | 60+: BOT
+    </p>
+</div>
+
+<div id="logPanel">
+    <h3>Guvenlik Loglari</h3>
+    <div id="logIcerik"></div>
+</div>
+
+<div class="content" id="icerik"></div>
+
+<div id="durumCubugu">
+    <span>Toplam Tiklama: <b id="tiklamaSayisi">0</b></span>
+    <span>Fare Hareketi: <b id="fareHareketi">0</b></span>
+    <span>Ort. Tiklama Araligi: <b id="ortAralik">-</b></span>
+    <span>Son Olay: <b id="sonOlay">-</b></span>
+</div>
+
+<script>
+// ============================================================
+// BOT ALGILAMA MOTORU
+// ============================================================
+
+const BotAlgilama = {
+    // Sayaclar
+    skor: {
+        trusted: 0,     // isTrusted ihlalleri
+        timing: 0,      // sabit aralik tespiti
+        pixel: 0,       // ayni piksele tiklama
+        speed: 0,       // asiri hiz
+        nomouse: 0      // fare hareketsizligi (tiklama var ama hareket yok)
+    },
+
+    // Veri toplama
+    tiklamalar: [],         // {x, y, time, isTrusted}
+    fareHareketleri: [],    // {x, y, time}
+    sonFarePozisyonu: null,
+    tiklamaSayisi: 0,
+    fareHareketSayisi: 0,
+    botAlgilandi: false,
+
+    // Esik degerleri
+    BOT_ESIK: 60,          // Bu skor ustunde BOT
+    SUPHELI_ESIK: 30,      // Bu skor ustunde SUPHELI
+
+    // --- TESPIT 1: isTrusted Kontrolu ---
+    trustedKontrol(event) {
+        if (!event.isTrusted) {
+            this.skor.trusted += 20;
+            this.logYaz('!!! isTrusted: false - YAPAY TIKLAMA TESPIT EDILDI !!!', 'danger');
+            return true;
+        }
+        return false;
+    },
+
+    // --- TESPIT 2: Tiklama Zamanlama Analizi ---
+    zamanlamaKontrol() {
+        if (this.tiklamalar.length < 5) return;
+
+        // Son 10 tiklama arasindaki araliklari hesapla
+        const son = this.tiklamalar.slice(-10);
+        const araliklar = [];
+        for (let i = 1; i < son.length; i++) {
+            araliklar.push(son[i].time - son[i-1].time);
+        }
+
+        if (araliklar.length < 3) return;
+
+        // Standart sapma hesapla
+        const ort = araliklar.reduce((a, b) => a + b, 0) / araliklar.length;
+        const varyans = araliklar.reduce((a, b) => a + Math.pow(b - ort, 2), 0) / araliklar.length;
+        const stdSapma = Math.sqrt(varyans);
+
+        // Cok dusuk standart sapma = sabit aralik = bot
+        if (stdSapma < 30 && araliklar.length >= 5) {
+            this.skor.timing += 5;
+            this.logYaz(
+                `Sabit aralik tespiti! Ort: ${ort.toFixed(0)}ms, StdSapma: ${stdSapma.toFixed(1)}ms`,
+                'warn'
+            );
+        }
+
+        // 100ms altinda aralik = insan olamaz
+        if (ort < 100) {
+            this.skor.speed += 10;
+            this.logYaz(`Asiri hiz! Ortalama aralik: ${ort.toFixed(0)}ms (insan limiti: ~200ms)`, 'danger');
+        }
+    },
+
+    // --- TESPIT 3: Ayni Piksele Tekrar Tiklama ---
+    pikselKontrol() {
+        if (this.tiklamalar.length < 3) return;
+
+        // (0,0) tiklamalarini filtrele - klavye ile yapilan tiklamalar
+        // her zaman clientX=0, clientY=0 gonderir, bu normal davranis
+        const son = this.tiklamalar.slice(-20).filter(t => t.x !== 0 || t.y !== 0);
+        if (son.length < 3) return;
+
+        let tekrarSayisi = 0;
+        for (let i = 1; i < son.length; i++) {
+            const dx = Math.abs(son[i].x - son[i-1].x);
+            const dy = Math.abs(son[i].y - son[i-1].y);
+            if (dx === 0 && dy === 0) {
+                tekrarSayisi++;
+            }
+        }
+
+        if (tekrarSayisi >= 3) {
+            this.skor.pixel += 5;
+            this.logYaz(`Ayni piksele ${tekrarSayisi}x tiklama tespit edildi!`, 'warn');
+        }
+    },
+
+    // --- SKOR HESAPLAMA ---
+    skorGuncelle() {
+        const toplam = this.skor.trusted + this.skor.timing +
+                       this.skor.pixel + this.skor.speed;
+
+        // UI guncelle
+        document.getElementById('stat-trusted').textContent = this.skor.trusted;
+        document.getElementById('stat-timing').textContent = this.skor.timing;
+        document.getElementById('stat-pixel').textContent = this.skor.pixel;
+        document.getElementById('stat-speed').textContent = this.skor.speed;
+        document.getElementById('stat-nomouse').textContent = this.skor.nomouse;
+        document.getElementById('stat-total').textContent = toplam;
+
+        // Renklendirme
+        const statEls = document.querySelectorAll('.stat-value');
+        statEls.forEach(el => {
+            const val = parseInt(el.textContent);
+            if (val > 0) el.className = 'stat-value stat-warn';
+            if (val >= 10) el.className = 'stat-value stat-danger';
+        });
+
+        // Skor cubugu
+        const fill = document.getElementById('skorFill');
+        const yuzde = Math.min(toplam, 100);
+        fill.style.width = yuzde + '%';
+
+        // Karar
+        const kararEl = document.getElementById('stat-karar');
+        const uyariEl = document.getElementById('botUyari');
+
+        if (toplam >= this.BOT_ESIK) {
+            kararEl.textContent = 'BOT ALGILANDI!';
+            kararEl.className = 'stat-value stat-danger';
+            fill.style.background = '#e74c3c';
+            if (!this.botAlgilandi) {
+                this.botAlgilandi = true;
+                uyariEl.style.display = 'block';
+                uyariEl.textContent =
+                    `BOT ALGILANDI! (Skor: ${toplam}) - ` +
+                    `Trusted:${this.skor.trusted} Timing:${this.skor.timing} ` +
+                    `Pixel:${this.skor.pixel} Speed:${this.skor.speed} NoMouse:${this.skor.nomouse}`;
+                this.logYaz('========== BOT ALGILANDI! ==========', 'danger');
+            }
+        } else if (toplam >= this.SUPHELI_ESIK) {
+            kararEl.textContent = 'SUPHELI';
+            kararEl.className = 'stat-value stat-warn';
+            fill.style.background = '#f39c12';
+        } else {
+            kararEl.textContent = 'INSAN';
+            kararEl.className = 'stat-value stat-ok';
+            fill.style.background = '#2ecc71';
+        }
+    },
+
+    // --- LOG ---
+    logYaz(mesaj, tip = 'ok') {
+        const zaman = new Date().toLocaleTimeString('tr-TR');
+        const div = document.createElement('div');
+        div.className = `log-entry log-${tip}`;
+        div.textContent = `[${zaman}] ${mesaj}`;
+        const panel = document.getElementById('logIcerik');
+        panel.insertBefore(div, panel.firstChild);
+    },
+
+    // --- ANA ISLEYICI ---
+    tiklamaIsle(event) {
+        this.tiklamaSayisi++;
+        const kayit = {
+            x: event.clientX,
+            y: event.clientY,
+            time: Date.now(),
+            isTrusted: event.isTrusted
+        };
+        this.tiklamalar.push(kayit);
+
+        // Tum tespitleri calistir
+        this.trustedKontrol(event);
+        this.zamanlamaKontrol();
+        this.pikselKontrol();
+        this.skorGuncelle();
+
+        // UI durum cubugu
+        document.getElementById('tiklamaSayisi').textContent = this.tiklamaSayisi;
+        document.getElementById('sonOlay').textContent =
+            `Tiklama (${event.clientX}, ${event.clientY}) isTrusted:${event.isTrusted}`;
+
+        if (this.tiklamalar.length >= 2) {
+            const araliklar = [];
+            for (let i = 1; i < this.tiklamalar.length; i++) {
+                araliklar.push(this.tiklamalar[i].time - this.tiklamalar[i-1].time);
+            }
+            const ort = araliklar.reduce((a, b) => a + b, 0) / araliklar.length;
+            document.getElementById('ortAralik').textContent = ort.toFixed(0) + 'ms';
+        }
+
+        // Normal log
+        if (event.isTrusted) {
+            this.logYaz(`Tiklama #${this.tiklamaSayisi} (${event.clientX},${event.clientY})`, 'ok');
+        }
+    },
+
+    fareIsle(event) {
+        this.fareHareketSayisi++;
+        this.fareHareketleri.push({
+            x: event.clientX,
+            y: event.clientY,
+            time: Date.now()
+        });
+        // Sadece her 50 harekette bir UI guncelle (performans icin)
+        if (this.fareHareketSayisi % 50 === 0) {
+            document.getElementById('fareHareketi').textContent = this.fareHareketSayisi;
+        }
+    },
+
+    // Skoru sifirla
+    sifirla() {
+        this.skor = { trusted: 0, timing: 0, pixel: 0, speed: 0, nomouse: 0 };
+        this.tiklamalar = [];
+        this.fareHareketleri = [];
+        this.tiklamaSayisi = 0;
+        this.fareHareketSayisi = 0;
+        this.botAlgilandi = false;
+        document.getElementById('botUyari').style.display = 'none';
+        document.getElementById('logIcerik').innerHTML = '';
+        document.getElementById('tiklamaSayisi').textContent = '0';
+        document.getElementById('fareHareketi').textContent = '0';
+        document.getElementById('ortAralik').textContent = '-';
+        document.getElementById('sonOlay').textContent = '-';
+        this.skorGuncelle();
+        this.logYaz('Sistem sifirlandi.', 'ok');
+    }
+};
+
+// ============================================================
+// SAYFA OLUSTURUCU
+// ============================================================
+
+const DERSLER = [
+    'Matematik', 'Turkce', 'Fen Bilimleri', 'Sosyal Bilgiler',
+    'Ingilizce', 'Muzik', 'Gorsel Sanatlar', 'Beden Egitimi',
+    'Din Kulturu', 'Bilisim'
+];
+
+const NOT_SECIMLERI = ['1', '2', '3', '4'];
+
+// 5 test ogrencisi olustur (5 x 80 = 400 radio buton, yeterli test icin)
+// Her ogrenci: 10 ders x 8 kriter = 80 radio buton
+const KRITERLER = [
+    'Sinav 1', 'Sinav 2', 'Sozlu 1', 'Sozlu 2',
+    'Odev', 'Proje', 'Performans', 'Katilim'
+];
+
+function sayfaOlustur() {
+    const icerik = document.getElementById('icerik');
+    let html = '';
+
+    for (let ogrNo = 1; ogrNo <= 5; ogrNo++) {
+        html += `<div class="ogrenci-card">`;
+        html += `<div class="ogrenci-baslik">Ogrenci #${ogrNo} - Test Ogrenci ${ogrNo}</div>`;
+
+        let butonIndex = 0;
+        for (const ders of DERSLER) {
+            for (const kriter of KRITERLER) {
+                const name = `ogr${ogrNo}_${ders}_${kriter}`.replace(/\s/g, '');
+                html += `<div class="not-satir">`;
+                html += `<span class="sira-no"><input type="text" value="${butonIndex + 1}" readonly tabindex="0" style="width:30px; text-align:center; border:1px solid #ccc; background:#f9f9f9;"></span>`;
+                html += `<span class="ders-adi">${ders} - ${kriter}</span>`;
+                html += `<span class="not-secim">`;
+                for (const not of NOT_SECIMLERI) {
+                    html += `<label>`;
+                    html += `<input type="radio" name="${name}" value="${not}"> ${not}`;
+                    html += `</label>`;
+                }
+                html += `</span></div>`;
+                butonIndex++;
+            }
+        }
+
+        html += `</div>`;
+    }
+
+    html += `<button id="IOMToolbarActive1_btnKaydet">Kaydet</button>`;
+    html += `<br><br>`;
+    icerik.innerHTML = html;
+
+    // Kaydet butonuna olay dinleyici
+    // NOT: tiklamaIsle burada CAGIRILMAZ, document listener zaten yakaliyor.
+    // Burada sadece kayit sonucu kontrol edilir (cift sayim onlenir).
+    document.getElementById('IOMToolbarActive1_btnKaydet').addEventListener('click', function(e) {
+        if (BotAlgilama.botAlgilandi) {
+            BotAlgilama.logYaz('KAYIT REDDEDILDI - Bot algilandi!', 'danger');
+            alert('BOT ALGILANDI! Kayit reddedildi.');
+        } else {
+            BotAlgilama.logYaz('Kayit basarili.', 'ok');
+        }
+    });
+}
+
+// ============================================================
+// OLAY DINLEYICILERI
+// ============================================================
+
+// Tum tiklamalari dinle
+document.addEventListener('click', function(e) {
+    BotAlgilama.tiklamaIsle(e);
+}, true);
+
+// Fare hareketlerini dinle
+document.addEventListener('mousemove', function(e) {
+    BotAlgilama.fareIsle(e);
+});
+
+// Saat gostergesi
+setInterval(function() {
+    document.getElementById('saatGosterge').textContent =
+        new Date().toLocaleTimeString('tr-TR');
+}, 1000);
+
+// ============================================================
+// SELENIUM ICIN API (window uzerinden erisim)
+// ============================================================
+window.getBotSkor = function() {
+    return {
+        trusted: BotAlgilama.skor.trusted,
+        timing: BotAlgilama.skor.timing,
+        pixel: BotAlgilama.skor.pixel,
+        speed: BotAlgilama.skor.speed,
+        nomouse: BotAlgilama.skor.nomouse,
+        toplam: BotAlgilama.skor.trusted + BotAlgilama.skor.timing +
+                BotAlgilama.skor.pixel + BotAlgilama.skor.speed,
+        botAlgilandi: BotAlgilama.botAlgilandi,
+        tiklamaSayisi: BotAlgilama.tiklamaSayisi,
+        karar: BotAlgilama.botAlgilandi ? 'BOT' :
+               (BotAlgilama.skor.trusted + BotAlgilama.skor.timing +
+                BotAlgilama.skor.pixel + BotAlgilama.skor.speed) >= 30 ? 'SUPHELI' : 'INSAN'
+    };
+};
+
+window.skorSifirla = function() {
+    BotAlgilama.sifirla();
+    // Radio butonlarin secimlerini de temizle
+    document.querySelectorAll('input[type="radio"]').forEach(function(r) {
+        r.checked = false;
+    });
+    return 'sifirlandi';
+};
+
+window.getRadioKoordinatlar = function() {
+    var buttons = document.querySelectorAll('input[type="radio"]');
+    var coords = Array.from(buttons).map(function(b) {
+        var r = b.getBoundingClientRect();
+        return {x: r.left + r.width/2, y: r.top + r.height/2};
+    });
+    var saveBtn = document.getElementById('IOMToolbarActive1_btnKaydet').getBoundingClientRect();
+    return {
+        radio_buttons: coords,
+        save_btn: {x: saveBtn.left + saveBtn.width/2, y: saveBtn.top + saveBtn.height/2}
+    };
+};
+
+// Sayfa yuklendiginde
+sayfaOlustur();
+BotAlgilama.logYaz('Sistem baslatildi. Bot algilama aktif.', 'ok');
+BotAlgilama.logYaz(`Esik degerleri - Supheli: ${BotAlgilama.SUPHELI_ESIK}, Bot: ${BotAlgilama.BOT_ESIK}`, 'ok');
+BotAlgilama.logYaz('5 ogrenci x 80 radio buton = 400 buton yuklendi.', 'ok');
+</script>
+
+</body>
+</html>

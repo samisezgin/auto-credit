@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.idea/
+.claude/
+
+# Otomasyon ciktilari
+koordinatlar.json
+ilerleme.json
+ayarlar.json
+settings.json
+otomasyon_log.txt
+log.txt
+screenshots/
+
+# OS
+Thumbs.db
+Desktop.ini
