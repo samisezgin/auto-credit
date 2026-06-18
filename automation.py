@@ -200,25 +200,37 @@ def main():
 
     toplam = unite_sayisi * soru_per_unite
     not_str = str(not_degeri) if not_degeri else "Rastgele"
-    print(f"\n{'='*50}")
-    print(f"  Unite     : {unite_sayisi}")
-    print(f"  Soru/unite: {soru_per_unite}")
-    print(f"  Toplam    : {toplam} soru")
-    print(f"  Not       : {not_str}")
-    print(f"  Ogrenci # : {islenen + 1}")
-    print(f"{'='*50}")
 
-    geri_sayim(5)
+    while True:
+        print(f"\n{'='*50}")
+        print(f"  Unite     : {unite_sayisi}")
+        print(f"  Soru/unite: {soru_per_unite}")
+        print(f"  Toplam    : {toplam} soru")
+        print(f"  Not       : {not_str}")
+        print(f"  Ogrenci # : {islenen + 1}")
+        print(f"{'='*50}")
 
-    log(f"[Ogrenci {islenen + 1}] Basliyor... (Not={not_str}, {unite_sayisi} unite x {soru_per_unite} soru)")
-    ogrenci_isle(unite_sayisi, soru_per_unite, notlar=not_degeri)
+        geri_sayim(5)
 
-    islenen += 1
-    ayar_kaydet(not_degeri, unite_sayisi, soru_per_unite, islenen)
+        log(f"[Ogrenci {islenen + 1}] Basliyor... (Not={not_str}, {unite_sayisi} unite x {soru_per_unite} soru)")
+        ogrenci_isle(unite_sayisi, soru_per_unite, notlar=not_degeri)
 
-    log(f"\n{'='*50}")
-    log(f"TAMAMLANDI! Ogrenci {islenen} islendi.")
-    log(f"Toplam islenen: {islenen}")
+        islenen += 1
+        ayar_kaydet(not_degeri, unite_sayisi, soru_per_unite, islenen)
+
+        log(f"\n{'='*50}")
+        log(f"TAMAMLANDI! Ogrenci {islenen} islendi.")
+        log(f"Toplam islenen: {islenen}")
+
+        print(f"\n{'='*50}")
+        print("  Sonraki ogrenci icin Enter'a bas")
+        print("  Cikmak icin 'q' yaz ve Enter'a bas")
+        print(f"{'='*50}")
+        cevap = input("  > ").strip().lower()
+        if cevap == "q":
+            log("Kullanici cikis yapti.")
+            break
+        log("Sonraki ogrenciye geciliyor...")
 
 
 if __name__ == "__main__":
