@@ -128,20 +128,20 @@ def geri_sayim(saniye=10):
 
 def not_tusla(not_degeri, katsayi):
     if not_degeri == 1:
-        time.sleep(random.uniform(0.04, 0.12) * katsayi)
+        time.sleep(random.uniform(0.02, 0.06) * katsayi)
         pyautogui.press('right')
-        time.sleep(random.uniform(0.04, 0.12) * katsayi)
+        time.sleep(random.uniform(0.02, 0.06) * katsayi)
         pyautogui.press('left')
     elif not_degeri == 2:
-        time.sleep(random.uniform(0.04, 0.12) * katsayi)
+        time.sleep(random.uniform(0.02, 0.06) * katsayi)
         pyautogui.press('right')
     elif not_degeri == 3:
         for _ in range(2):
-            time.sleep(random.uniform(0.04, 0.12) * katsayi)
+            time.sleep(random.uniform(0.02, 0.06) * katsayi)
             pyautogui.press('right')
     elif not_degeri == 4:
         for _ in range(3):
-            time.sleep(random.uniform(0.04, 0.12) * katsayi)
+            time.sleep(random.uniform(0.02, 0.06) * katsayi)
             pyautogui.press('right')
 
 
@@ -208,7 +208,7 @@ def main():
     print(f"  Ogrenci # : {islenen + 1}")
     print(f"{'='*50}")
 
-    geri_sayim(10)
+    geri_sayim(5)
 
     log(f"[Ogrenci {islenen + 1}] Basliyor... (Not={not_str}, {unite_sayisi} unite x {soru_per_unite} soru)")
     ogrenci_isle(unite_sayisi, soru_per_unite, notlar=not_degeri)
