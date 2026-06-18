@@ -223,14 +223,22 @@ def main():
         log(f"Toplam islenen: {islenen}")
 
         print(f"\n{'='*50}")
-        print("  Sonraki ogrenci icin Enter'a bas")
-        print("  Cikmak icin 'q' yaz ve Enter'a bas")
+        print("  Cikmak icin 'q', devam icin not gir (1-4)")
         print(f"{'='*50}")
-        cevap = input("  > ").strip().lower()
-        if cevap == "q":
-            log("Kullanici cikis yapti.")
-            break
-        log("Sonraki ogrenciye geciliyor...")
+        v_not_str = str(not_degeri) if not_degeri else "Rastgele"
+        while True:
+            cevap = input(f"  Not({v_not_str}): ").strip().lower()
+            if cevap == "q":
+                log("Kullanici cikis yapti.")
+                return
+            if cevap == "":
+                break
+            if cevap in ("1", "2", "3", "4"):
+                not_degeri = int(cevap)
+                not_str = str(not_degeri)
+                break
+            print("  1-4, Enter veya q")
+        log(f"Sonraki ogrenci... (Not={not_str})")
 
 
 if __name__ == "__main__":
