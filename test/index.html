@@ -66,22 +66,30 @@
         /* Ana icerik */
         .content { margin-right: 600px; padding: 20px; }
 
-        /* Ogrenci tablosu */
-        .ogrenci-card {
-            background: white; border-radius: 8px; padding: 15px;
-            margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        /* Unite tab */
+        .unite-card {
+            background: white; border-radius: 8px;
+            margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
-        .ogrenci-baslik {
-            font-weight: bold; font-size: 14px; color: #2c3e50;
-            margin-bottom: 10px; padding-bottom: 8px;
-            border-bottom: 1px solid #eee;
+        .unite-baslik {
+            font-weight: bold; font-size: 14px; color: #fff;
+            background: #34495e; padding: 10px 15px; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
         }
+        .unite-baslik:hover { background: #2c3e50; }
+        .unite-baslik .ok { transition: transform 0.2s; }
+        .unite-baslik.acik .ok { transform: rotate(90deg); }
+        .unite-icerik {
+            display: none; padding: 10px 15px;
+        }
+        .unite-icerik.acik { display: block; }
         .not-satir {
             display: flex; align-items: center; padding: 4px 0;
             border-bottom: 1px solid #f5f5f5;
         }
         .not-satir:hover { background: #f8f9fa; }
-        .ders-adi { width: 180px; font-size: 13px; color: #555; }
+        .soru-adi { width: 180px; font-size: 13px; color: #555; }
         .not-secim label {
             margin-right: 8px; font-size: 12px; color: #777; cursor: pointer;
         }
@@ -395,57 +403,64 @@ const BotAlgilama = {
 // SAYFA OLUSTURUCU
 // ============================================================
 
-const DERSLER = [
-    'Matematik', 'Turkce', 'Fen Bilimleri', 'Sosyal Bilgiler',
-    'Ingilizce', 'Muzik', 'Gorsel Sanatlar', 'Beden Egitimi',
-    'Din Kulturu', 'Bilisim'
-];
-
+const UNITE_SAYISI = 3;
+const SORU_PER_UNITE = 7;
 const NOT_SECIMLERI = ['1', '2', '3', '4'];
 
-// 5 test ogrencisi olustur (5 x 80 = 400 radio buton, yeterli test icin)
-// Her ogrenci: 10 ders x 8 kriter = 80 radio buton
-const KRITERLER = [
-    'Sinav 1', 'Sinav 2', 'Sozlu 1', 'Sozlu 2',
-    'Odev', 'Proje', 'Performans', 'Katilim'
+const UNITE_ADLARI = [
+    'Unite 1 - Aile Yasami',
+    'Unite 2 - Okul Hayati',
+    'Unite 3 - Toplum ve Cevre'
 ];
+
+const SORU_ADLARI = [
+    'Kazanim 1', 'Kazanim 2', 'Kazanim 3', 'Kazanim 4',
+    'Kazanim 5', 'Kazanim 6', 'Kazanim 7'
+];
+
+function uniteToggle(uniteNo) {
+    const baslik = document.getElementById('unite-baslik-' + uniteNo);
+    const icerik = document.getElementById('unite-icerik-' + uniteNo);
+    baslik.classList.toggle('acik');
+    icerik.classList.toggle('acik');
+}
 
 function sayfaOlustur() {
     const icerik = document.getElementById('icerik');
     let html = '';
 
-    for (let ogrNo = 1; ogrNo <= 5; ogrNo++) {
-        html += `<div class="ogrenci-card">`;
-        html += `<div class="ogrenci-baslik">Ogrenci #${ogrNo} - Test Ogrenci ${ogrNo}</div>`;
+    for (let u = 0; u < UNITE_SAYISI; u++) {
+        const uniteNo = u + 1;
+        const acik = u === 0 ? ' acik' : '';
 
-        let butonIndex = 0;
-        for (const ders of DERSLER) {
-            for (const kriter of KRITERLER) {
-                const name = `ogr${ogrNo}_${ders}_${kriter}`.replace(/\s/g, '');
-                html += `<div class="not-satir">`;
-                html += `<span class="sira-no"><input type="text" value="${butonIndex + 1}" readonly tabindex="0" style="width:30px; text-align:center; border:1px solid #ccc; background:#f9f9f9;"></span>`;
-                html += `<span class="ders-adi">${ders} - ${kriter}</span>`;
-                html += `<span class="not-secim">`;
-                for (const not of NOT_SECIMLERI) {
-                    html += `<label>`;
-                    html += `<input type="radio" name="${name}" value="${not}"> ${not}`;
-                    html += `</label>`;
-                }
-                html += `</span></div>`;
-                butonIndex++;
+        html += `<div class="unite-card">`;
+        html += `<div class="unite-baslik${acik}" id="unite-baslik-${uniteNo}" tabindex="0"
+                    onclick="uniteToggle(${uniteNo})"
+                    onkeydown="if(event.key==='Enter'){uniteToggle(${uniteNo})}">`;
+        html += `<span>${UNITE_ADLARI[u]}</span>`;
+        html += `<span class="ok">&#9654;</span>`;
+        html += `</div>`;
+        html += `<div class="unite-icerik${acik}" id="unite-icerik-${uniteNo}">`;
+
+        for (let s = 0; s < SORU_PER_UNITE; s++) {
+            const name = `unite${uniteNo}_soru${s + 1}`;
+            html += `<div class="not-satir">`;
+            html += `<span class="sira-no"><input type="text" value="${s + 1}" readonly tabindex="0" style="width:30px; text-align:center; border:1px solid #ccc; background:#f9f9f9;"></span>`;
+            html += `<span class="soru-adi">${SORU_ADLARI[s]}</span>`;
+            html += `<span class="not-secim">`;
+            for (const not of NOT_SECIMLERI) {
+                html += `<label><input type="radio" name="${name}" value="${not}"> ${not}</label>`;
             }
+            html += `</span></div>`;
         }
 
-        html += `</div>`;
+        html += `</div></div>`;
     }
 
     html += `<button id="IOMToolbarActive1_btnKaydet">Kaydet</button>`;
     html += `<br><br>`;
     icerik.innerHTML = html;
 
-    // Kaydet butonuna olay dinleyici
-    // NOT: tiklamaIsle burada CAGIRILMAZ, document listener zaten yakaliyor.
-    // Burada sadece kayit sonucu kontrol edilir (cift sayim onlenir).
     document.getElementById('IOMToolbarActive1_btnKaydet').addEventListener('click', function(e) {
         if (BotAlgilama.botAlgilandi) {
             BotAlgilama.logYaz('KAYIT REDDEDILDI - Bot algilandi!', 'danger');
@@ -522,7 +537,7 @@ window.getRadioKoordinatlar = function() {
 sayfaOlustur();
 BotAlgilama.logYaz('Sistem baslatildi. Bot algilama aktif.', 'ok');
 BotAlgilama.logYaz(`Esik degerleri - Supheli: ${BotAlgilama.SUPHELI_ESIK}, Bot: ${BotAlgilama.BOT_ESIK}`, 'ok');
-BotAlgilama.logYaz('5 ogrenci x 80 radio buton = 400 buton yuklendi.', 'ok');
+BotAlgilama.logYaz(`${UNITE_SAYISI} unite x ${SORU_PER_UNITE} soru = ${UNITE_SAYISI * SORU_PER_UNITE} radio buton yuklendi.`, 'ok');
 </script>
 
 </body>
