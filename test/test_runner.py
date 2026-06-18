@@ -110,6 +110,7 @@ def main():
             pyautogui.press('tab')
             time.sleep(random.uniform(0.1, 0.3) * katsayi)
             pyautogui.press('enter')
+            time.sleep(0.3)
             baslangic = 0
             print(f"  Unite {unite_no}/{UNITE_SAYISI}")
 
